@@ -1,17 +1,8 @@
 import json
 import string
 
-print("##Note: Please include file extensions##")
-
-in_file = None
-while in_file==None or in_file=='':
-    in_file = input("What notebook should be converted? ")
-
-with open(in_file, "r") as f:
-    jupy_dict = json.load(f)
-
-
 def comment_format(line):
+    """Replace heading formatting with #'s"""
     # A line of #'s will be put above and below a h1 or h2 header
     big_header_start = False
     big_header_end = False
@@ -59,8 +50,19 @@ def comment_format(line):
     
     return line
 
-out_file = None
-while out_file==None or out_file=='':
+print("##Note: Please include file extensions##")
+
+# User picks the input file
+in_file = ''
+while in_file=='':
+    in_file = input("What notebook should be converted? ")
+
+with open(in_file, "r") as f:
+    jupy_dict = json.load(f)
+
+# User picks the output file
+out_file = ''
+while out_file=='':
     out_file = input("What should the output sciprt be called?\n"
                      "Enter 'same' to change only the name's extension: ")
     if out_file == 'same':
@@ -68,23 +70,20 @@ while out_file==None or out_file=='':
 
 with open(out_file, "w") as wf:
     for cell in jupy_dict["cells"]:
-            if cell['cell_type']=='code':
+        if cell['cell_type']=='code':
+            for line in cell['source']:
+                wf.write(line)
+            wf.write('\n\n')
+        elif cell['cell_type']=='markdown':
+            # Add an empty line for emphasis
+            wf.write('\n')
+
+            # Write the markdown
+            if len(cell['source'])>3:
+                wf.write('"""\n'),
                 for line in cell['source']:
-                    wf.write(line)
-                wf.write('\n\n')
-            elif cell['cell_type']=='markdown':
-                # Add an empty line for emphasis
-                wf.write('\n')
-
-                # Write the markdown
-                if len(cell['source'])>3:
-                    wf.write('"""\n'),
-                    for line in cell['source']:
-                        wf.write(comment_format(line))
-                    wf.write('"""\n')
-                else:
-                    for line in cell['source']:
-                        wf.write(comment_format(line))
-
-
-
+                    wf.write(comment_format(line))
+                wf.write('"""\n')
+            else:
+                for line in cell['source']:
+                    wf.write(comment_format(line))
